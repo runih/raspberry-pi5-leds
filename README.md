@@ -1,40 +1,52 @@
-# Raspberry Pi 5 Network LED Monitor
+# Raspberry Pi 5 LED I/O Monitors
 
-This project provides a Bash script to visually indicate network activity on a Raspberry Pi 5 using its onboard LEDs. The script monitors packet transmission and reception on a specified network interface and blinks the ACT and PWR LEDs to signal activity.
+This project provides utilities to monitor system I/O activity on a Raspberry Pi (or similar Linux device) and indicate activity using onboard LEDs.
 
 ## Features
 
-- Monitors both transmitted (TX) and received (RX) packets.
-- Blinks LEDs for each packet event.
-- Provides visual feedback when the network interface is unavailable.
-- Customizable network interface selection.
+### rxtx_led.sh
 
-## Requirements
+- Bash script to monitor network interface packet activity.
+- Flashes LEDs to indicate RX (receive) and TX (transmit) packets.
+- Interface name can be specified as an argument (default: `end0`).
+- Uses sysfs to control LEDs (`/sys/class/leds/ACT/brightness` and `/sys/class/leds/PWR/brightness`).
+- Provides visual feedback for network activity and interface status.
 
-- Raspberry Pi 5 (or compatible hardware with `/sys/class/leds/ACT` and `/sys/class/leds/PWR`)
-- Linux with Bash
-- Sufficient permissions to write to `/sys/class/leds/*` and `/sys/class/net/*`
+### disk_io_led_monitor
 
-## Installation
+- C program (`disk_io_led_monitor.c`) and Bash script (`disk_io_led_monitor.sh`) to monitor disk and swap I/O.
+- Flashes the green LED for SSD I/O and the red LED for swap I/O.
+- SSD device can be specified as a command-line argument (e.g., `sda`, `nvme0n1`).
+- Uses threads with named identifiers for easier debugging (C version).
+- Requires root privileges to access sysfs LED controls.
 
-1. Clone this repository:
-   ```sh
-   git clone https://github.com/runih/raspberry-pi5-leds.git
-   cd raspberry-pi5-leds
-   ```
-2. Make the script executable:
-   ```sh
-   chmod +x rxtx_led.sh
-   ```
+## Building
+
+To build the C program, run:
+
+```sh
+make disk_io_led_monitor
+```
 
 ## Usage
 
-Run the script with the desired network interface (e.g., `eth0`). If omitted, it defaults to `end0`:
+### Network RX/TX LED Monitor
+
 ```sh
-sudo ./rxtx_led.sh eth0
+sudo ./rxtx_led.sh [interface]
 ```
+- `[interface]` is optional (default: `end0`).
 
-## Notes
+### Disk and Swap I/O LED Monitor
 
-- Root privileges (`sudo`) are required to access sysfs LED controls.
-- The script is designed for Raspberry Pi 5; LED paths may differ on other models.
+```sh
+sudo ./disk_io_led_monitor [device]
+```
+- `[device]` is optional (default: `sda`). Example: `sudo ./disk_io_led_monitor nvme0n1`
+
+## Cleaning
+
+To remove built binaries:
+
+```sh
+make clean
